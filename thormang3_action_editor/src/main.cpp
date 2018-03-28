@@ -102,6 +102,12 @@ int main(int argc, char **argv)
        editor.setValueUpDown(10);
      else if (ch == ' ')
        editor.toggleTorque();
+     else if (ch == ',')
+       editor.storeValueToCache();
+     else if (ch == '.')
+       editor.setValueFromCache();
+     else if (ch == '/')
+       editor.clearCache();
      else if (ch >= 'A' && ch <= 'z')
      {
        char input[128] = { 0, };
@@ -190,6 +196,13 @@ int main(int argc, char **argv)
            {
              editor.playCmd();
            }
+           else if (strcmp(cmd, "playboth") == 0)
+           {
+             if (num_param > 0)
+               editor.playCmd(iparam[0]);
+             else
+               editor.printCmd("Need parameter");
+           }
            else if (strcmp(cmd, "set") == 0)
            {
              if (num_param > 0)
@@ -203,6 +216,62 @@ int main(int argc, char **argv)
              editor.turnOnOffCmd(true, num_param, iparam);
            else if (strcmp(cmd, "off") == 0)
              editor.turnOnOffCmd(false, num_param, iparam);
+           else if (strcmp(cmd, "mrl") == 0)
+           {
+             if (num_param > 0)
+               editor.mirrorStepCmd(iparam[0], thormang3::ActionEditor::RightToLeft,
+                                    thormang3::ActionEditor::AllBody);
+             else
+               editor.printCmd("Need parameter");
+           }
+           else if (strcmp(cmd, "murl") == 0)
+           {
+             if (num_param > 0)
+               editor.mirrorStepCmd(iparam[0], thormang3::ActionEditor::RightToLeft,
+                                    thormang3::ActionEditor::UpperBody);
+             else
+               editor.printCmd("Need parameter");
+           }
+           else if (strcmp(cmd, "mlrl") == 0)
+           {
+             if (num_param > 0)
+               editor.mirrorStepCmd(iparam[0], thormang3::ActionEditor::RightToLeft,
+                                    thormang3::ActionEditor::LowerBody);
+             else
+               editor.printCmd("Need parameter");
+           }
+           else if (strcmp(cmd, "mlr") == 0)
+           {
+             if (num_param > 0)
+               editor.mirrorStepCmd(iparam[0], thormang3::ActionEditor::LeftToRight,
+                                    thormang3::ActionEditor::AllBody);
+             else
+               editor.printCmd("Need parameter");
+           }
+           else if (strcmp(cmd, "mulr") == 0)
+           {
+             if (num_param > 0)
+               editor.mirrorStepCmd(iparam[0], thormang3::ActionEditor::LeftToRight,
+                                    thormang3::ActionEditor::UpperBody);
+             else
+               editor.printCmd("Need parameter");
+           }
+           else if (strcmp(cmd, "mllr") == 0)
+           {
+             if (num_param > 0)
+               editor.mirrorStepCmd(iparam[0], thormang3::ActionEditor::LeftToRight,
+                                    thormang3::ActionEditor::LowerBody);
+             else
+               editor.printCmd("Need parameter");
+           }
+           else if (strcmp(cmd, "ms") == 0)
+           {
+             if (num_param > 0)
+               editor.mirrorStepCmd(iparam[0], thormang3::ActionEditor::SwitchEach,
+                                    thormang3::ActionEditor::AllBody);
+             else
+               editor.printCmd("Need parameter");
+           }
            else if (strcmp(cmd, "w") == 0)
            {
              if (num_param > 0)
