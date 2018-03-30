@@ -1,18 +1,21 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>thormang3_tools</name>
-  <version>0.1.2</version>
-  <description>ROS packages for the thormang3_tools (meta package)</description>
-  <license>BSD</license>
-  <author email="sch@robotis.com">SCH</author>
-  <author email="hjsong@robotis.com">Jay Song</author>
+  <version>0.2.0</version>
+  <description>
+    ROS packages for the thormang3_tools (meta package)
+  </description>
+  <license>Apache 2.0</license>
   <author email="kmjung@robotis.com">Kayman</author>
+  <author email="sch@robotis.com">SCH</author>
+  <author>Jay Song</author>
   <maintainer email="pyo@robotis.com">Pyo</maintainer>
-  <url type="bugtracker">https://github.com/ROBOTIS-GIT/ROBOTIS-THORMANG-Tools/issues</url>
-  <url type="repository">https://github.com/ROBOTIS-GIT/ROBOTIS-THORMANG-Tools</url>
   <url type="website">http://wiki.ros.org/thormang3_tools</url>
+  <url type="emanual">http://emanual.robotis.com/docs/en/platform/thormang3/introduction/</url>
+  <url type="repository">https://github.com/ROBOTIS-GIT/ROBOTIS-THORMANG-Tools</url>
+  <url type="bugtracker">https://github.com/ROBOTIS-GIT/ROBOTIS-THORMANG-Tools/issues</url>
   <buildtool_depend>catkin</buildtool_depend>
-  <run_depend>thormang3_action_editor</run_depend>
-  <run_depend>thormang3_offset_tuner_server</run_depend>
+  <exec_depend>thormang3_action_editor</exec_depend>
+  <exec_depend>thormang3_offset_tuner_server</exec_depend>
   <export><metapackage/></export>
 </package>
