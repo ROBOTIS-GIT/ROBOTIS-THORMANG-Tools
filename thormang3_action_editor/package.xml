@@ -1,26 +1,29 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>thormang3_action_editor</name>
-  <version>0.0.0</version>
+  <version>0.2.0</version>
   <description>
     The thormang3_action_editor package
     This package is a action editor for thormang3.
     The action file which is edited by this editor will be used with this action editor.
   </description>
-  <license>BSD</license>
-  <author email="hjsong@robotis.com">Jay</author>
-  <maintainer email="hjsong@robotis.com">Jay</maintainer>
+  <license>Apache 2.0</license>
+  <author email="kmjung@robotis.com">Kayman</author>
+  <author email="sch@robotis.com">SCH</author>
+  <author>Jay Song</author>
+  <maintainer email="pyo@robotis.com">Pyo</maintainer>
+  <url type="website">http://wiki.ros.org/thormang3_action_editor</url>
+  <url type="emanual">http://emanual.robotis.com/docs/en/platform/thormang3/introduction/</url>
+  <url type="repository">https://github.com/ROBOTIS-GIT/ROBOTIS-THORMANG-Tools</url>
+  <url type="bugtracker">https://github.com/ROBOTIS-GIT/ROBOTIS-THORMANG-Tools/issues</url>
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>roscpp</build_depend>
-  <build_depend>std_msgs</build_depend>
-  <build_depend>robotis_framework_msgs</build_depend>
-  <build_depend>robotis_framework_common</build_depend>
-  <build_depend>robotis_controller</build_depend>  
-  <build_depend>thormang3_action_module</build_depend>
-  <run_depend>robotis_controller_msgs</run_depend>  
-  <run_depend>roscpp</run_depend>
-  <run_depend>robotis_framework_common</run_depend>
-  <run_depend>robotis_controller</run_depend>
-  <run_depend>thormang3_action_module</run_depend>
-
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>dynamixel_sdk</depend>
+  <depend>robotis_controller</depend>
+  <depend>robotis_device</depend>
+  <depend>thormang3_action_module</depend>
+  <depend>libncurses-dev</depend>
+  <depend>yaml-cpp</depend>
+  <exec_depend>thormang3_manager</exec_depend>
 </package>

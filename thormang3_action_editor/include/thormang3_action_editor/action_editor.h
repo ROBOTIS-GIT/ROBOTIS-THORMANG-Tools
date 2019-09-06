@@ -1,38 +1,24 @@
 /*******************************************************************************
- * Copyright (c) 2016, ROBOTIS CO., LTD.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * * Neither the name of ROBOTIS nor the names of its
- *   contributors may be used to endorse or promote products derived from
- *   this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+* Copyright 2018 ROBOTIS CO., LTD.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 /*
  * action_editor.h
  *
  *  Created on: 2016. 12. 16.
- *      Author: JaySong
+ *      Author: Jay Song
  */
 
 #ifndef THORMANG3_ACTION_EDITOR_ACTION_EDITOR_H_
@@ -62,6 +48,19 @@ namespace thormang3
 class ActionEditor
 {
 public:
+  enum MirrorCommandType
+  {
+    LeftToRight = 1,
+    RightToLeft = 2,
+    SwitchEach = 3
+  };
+  enum MirrorTargetType
+  {
+    UpperBody = 1,
+    LowerBody = 2,
+    AllBody = 3
+  };
+
   ActionEditor();
   ~ActionEditor();
 
@@ -95,6 +94,9 @@ public:
   void setValue(int value);
   int  getValue();
   void toggleTorque();
+  void storeValueToCache();
+  void setValueFromCache();
+  void clearCache();
 
   // Command process
   void beginCommandMode();
@@ -106,9 +108,11 @@ public:
   void timeCmd();
   void speedCmd();
   void playCmd();
+  void playCmd(int mp3_index);
   void playCmd(const char* file_path);
   void listCmd();
   void turnOnOffCmd(bool on, int num_param, int *list);
+  void mirrorStepCmd(int index, int mirror_type, int target_type);
   void writeStepCmd(int index);
   void deleteStepCmd(int index);
   void insertStepCmd(int index);
@@ -128,9 +132,14 @@ private:
 
   int convert4095ToPositionValue(int id, int w4095);
   int convertPositionValueTo4095(int id, int PositionValue);
+  int convert4095ToMirror(int id, int w4095);
+
+  bool loadMp3Path(int mp3_index, std::string &path);
+  bool loadMirrorJoint();
 
   struct termios oldterm, new_term;
   ros::Publisher enable_ctrl_module_pub_;
+  ros::Publisher play_sound_pub_;
 
   action_file_define::Page page_;
   action_file_define::Step step_;
@@ -142,6 +151,14 @@ private:
   std::map<int, int> joint_id_to_row_index_;
   std::map<int, int> joint_row_index_to_id_;
   std::map<std::string, int> joint_name_to_id_;
+
+  std::map<int, int> upper_body_mirror_joints_rl_;
+  std::map<int, int> upper_body_mirror_joints_lr_;
+  std::map<int, int> lower_body_mirror_joints_rl_;
+  std::map<int, int> lower_body_mirror_joints_lr_;
+
+  std::string default_editor_script_path_;
+  std::string mirror_joint_file_path_;
 
   std::map<std::string, dynamixel::GroupSyncWrite *> port_to_sync_write_go_cmd_;
 
@@ -189,6 +206,7 @@ private:
   int accel_row_;
   int next_row_;
   int exit_row_;
+  int cache_value_;
 };
 
 }

@@ -1,43 +1,27 @@
 /*******************************************************************************
- * Copyright (c) 2016, ROBOTIS CO., LTD.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * * Redistributions of source code must retain the above copyright notice, this
- *   list of conditions and the following disclaimer.
- *
- * * Redistributions in binary form must reproduce the above copyright notice,
- *   this list of conditions and the following disclaimer in the documentation
- *   and/or other materials provided with the distribution.
- *
- * * Neither the name of ROBOTIS nor the names of its
- *   contributors may be used to endorse or promote products derived from
- *   this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *******************************************************************************/
+* Copyright 2018 ROBOTIS CO., LTD.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*     http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*******************************************************************************/
 
 /*
  * action_editor.cpp
  *
  *  Created on: 2016. 12. 16.
- *      Author: JaySong
+ *      Author: Jay Song
  */
 
-
 #include "thormang3_action_editor/action_editor.h"
-
 
 using namespace thormang3;
 
@@ -291,6 +275,7 @@ bool ActionEditor::initializeActionEditor(std::string robot_file_path, std::stri
   //Initialize Publisher
   ros::NodeHandle nh;
   enable_ctrl_module_pub_ = nh.advertise<std_msgs::String>("/robotis/enable_ctrl_module", 0);
+  play_sound_pub_ = nh.advertise<std_msgs::String>("/play_sound_file", 0);
 
   //Initialize Member variable
   for(std::map<std::string, robotis_framework::Dynamixel*>::iterator it = robot_->dxls_.begin(); it != robot_->dxls_.end(); it++)
@@ -344,6 +329,17 @@ bool ActionEditor::initializeActionEditor(std::string robot_file_path, std::stri
         8);
   }
 
+  default_editor_script_path_ = ros::package::getPath("op3_action_editor") + "/script/editor_script.yaml";
+  mirror_joint_file_path_ = ros::package::getPath("op3_action_editor") + "/config/config_mirror_joint.yaml";
+
+  // for mirroring
+  upper_body_mirror_joints_rl_.clear();
+  upper_body_mirror_joints_lr_.clear();
+  lower_body_mirror_joints_rl_.clear();
+  lower_body_mirror_joints_lr_.clear();
+
+  loadMirrorJoint();
+
   return true;
 }
 
@@ -357,6 +353,76 @@ int ActionEditor::convertPositionValueTo4095(int id, int PositionValue)
 {
   double rad = robot_->dxls_[joint_id_to_name_[id]]->convertValue2Radian(PositionValue);
   return (int)((rad + M_PI)*2048.0/M_PI);
+}
+
+int ActionEditor::convert4095ToMirror(int id, int w4095)
+{
+  return 4095 - w4095;
+}
+
+bool ActionEditor::loadMp3Path(int mp3_index, std::string &path)
+{
+  YAML::Node doc;
+
+  try
+  {
+    // load yaml
+    doc = YAML::LoadFile(default_editor_script_path_.c_str());
+  } catch (const std::exception& e)
+  {
+    return false;
+  }
+
+  // parse action_sound table
+  YAML::Node sub_node = doc["action_and_sound"];
+  for (YAML::iterator yaml_it = sub_node.begin(); yaml_it != sub_node.end(); ++yaml_it)
+  {
+    int index = yaml_it->first.as<int>();
+    if (mp3_index == index)
+    {
+      path = yaml_it->second.as<std::string>();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool ActionEditor::loadMirrorJoint()
+{
+  YAML::Node doc;
+
+  try
+  {
+    // load yaml
+    doc = YAML::LoadFile(mirror_joint_file_path_.c_str());
+  } catch (const std::exception& e)
+  {
+    return false;
+  }
+
+  // parse action_sound table
+  YAML::Node sub_node = doc["upper_body"];
+  for (YAML::iterator yaml_it = sub_node.begin(); yaml_it != sub_node.end(); ++yaml_it)
+  {
+    int right_id = yaml_it->first.as<int>();
+    int left_id = yaml_it->second.as<int>();
+
+    upper_body_mirror_joints_rl_[right_id] = left_id;
+    upper_body_mirror_joints_lr_[left_id] = right_id;
+  }
+
+  YAML::Node sub_node2 = doc["lower_body"];
+  for (YAML::iterator yaml_it = sub_node2.begin(); yaml_it != sub_node2.end(); ++yaml_it)
+  {
+    int right_id = yaml_it->first.as<int>();
+    int left_id = yaml_it->second.as<int>();
+
+    lower_body_mirror_joints_rl_[right_id] = left_id;
+    lower_body_mirror_joints_lr_[left_id] = right_id;
+  }
+
+  return true;
 }
 
 // Disp & Drawing
@@ -1049,6 +1115,33 @@ void ActionEditor::toggleTorque()
   goToCursor(curr_col_, curr_row_);
 }
 
+void ActionEditor::storeValueToCache()
+{
+  cache_value_ = getValue();
+}
+
+void ActionEditor::setValueFromCache()
+{
+  // cache is empty.
+  if (cache_value_ == -1)
+  {
+    int cursor_col = curr_col_;
+    int cursor_row = curr_row_;
+
+    printCmd("Cache is empty.");
+    goToCursor(cursor_col, cursor_row);
+
+    return;
+  }
+
+  // set value
+  setValue(cache_value_);
+}
+
+void ActionEditor::clearCache()
+{
+  cache_value_ = -1;
+}
 
 // Command process
 void ActionEditor::beginCommandMode()
@@ -1080,6 +1173,7 @@ void ActionEditor::helpCmd()
   printf(" set [value]        Sets value on cursor [value].\n");
   printf(" save               Saves changes.\n");
   printf(" play               Motion playback of current page.\n");
+  printf(" playboth [index]   Motion playback of current page with [index] mp3.\n");
   printf(" g [index]          Motion playback of STP[index].\n");
   printf(" name               Name for current page or changes the name of current page.\n");
   printf(" time               Change time base playing.\n");
@@ -1092,6 +1186,9 @@ void ActionEditor::helpCmd()
   printf(" m [index] [index2] Moves data from [index] to [index2] step.\n");
   printf(" d [index]          Deletes data from STP[index]. \n"
          "                    Pushes data from STP[index] to STP[index-1].\n");
+  printf(" mlr [index]        Mirror the left side value to the right of STP[index]. \n");
+  printf(" mrl [index]        Mirror the right side value to the left of STP[index]. \n");
+  printf(" ms [index]         Switch the values between left and right of STP[index]. \n");
   printf(" on/off             Turn On/Off torque from ALL actuators.\n");
   printf(" on/off [index1] [index2] ...  \n"
          "                    turns On/Off torque from ID[index1] ID[index2]...\n");
@@ -1150,6 +1247,11 @@ void ActionEditor::speedCmd()
 
 void ActionEditor::playCmd()
 {
+  playCmd(-1);
+}
+
+void ActionEditor::playCmd(int mp3_index)
+{
   uint32_t value;
 
   for (int i = 0; i < page_.header.stepnum; i++)
@@ -1180,6 +1282,21 @@ void ActionEditor::playCmd()
     printCmd("Failed to play this page!");
     ctrl_->stopTimer();
     return;
+  }
+
+  // play mp3
+  if (mp3_index != -1)
+  {
+    std::string mp3_path = "";
+    bool get_path_result = loadMp3Path(mp3_index, mp3_path);
+
+    if (get_path_result == true)
+    {
+      std_msgs::String sound_msg;
+      sound_msg.data = mp3_path;
+
+      play_sound_pub_.publish(sound_msg);
+    }
   }
 
   setSTDin();
@@ -1318,6 +1435,82 @@ void ActionEditor::turnOnOffCmd(bool on, int num_param, int *list)
 
   readStep();
   drawStep(7);
+}
+
+void ActionEditor::mirrorStepCmd(int index, int mirror_type, int target_type)
+{
+  // check index
+  if (index < 0 || index >= action_file_define::MAXNUM_STEP)
+  {
+    printCmd("Invalid step index");
+    return;
+  }
+
+  // store previous step
+  action_file_define::Step before_step = page_.step[index];
+
+  //check target_type
+  if (target_type == UpperBody || target_type == AllBody)
+  {
+    if (mirror_type == RightToLeft || mirror_type == SwitchEach)
+    {
+      for (std::map<int, int>::iterator it = upper_body_mirror_joints_rl_.begin();
+          it != upper_body_mirror_joints_rl_.end(); it++)
+      {
+        int right_id = it->first;
+        int left_id = it->second;
+        int mirror_value = convert4095ToMirror(right_id, before_step.position[right_id]);
+
+        page_.step[index].position[left_id] = mirror_value;
+      }
+    }
+
+    if (mirror_type == LeftToRight || mirror_type == SwitchEach)
+    {
+      for (std::map<int, int>::iterator it = upper_body_mirror_joints_lr_.begin();
+          it != upper_body_mirror_joints_lr_.end(); it++)
+      {
+        int left_id = it->first;
+        int right_id = it->second;
+        int mirror_value = convert4095ToMirror(left_id, before_step.position[left_id]);
+
+        page_.step[index].position[right_id] = mirror_value;
+      }
+    }
+  }
+
+  if (target_type == LowerBody || target_type == AllBody)
+  {
+    if (mirror_type == RightToLeft || mirror_type == SwitchEach)
+    {
+      for (std::map<int, int>::iterator it = lower_body_mirror_joints_rl_.begin();
+          it != lower_body_mirror_joints_rl_.end(); it++)
+      {
+        int right_id = it->first;
+        int left_id = it->second;
+        int mirror_value = convert4095ToMirror(right_id, before_step.position[right_id]);
+
+        page_.step[index].position[left_id] = mirror_value;
+      }
+    }
+
+    if (mirror_type == LeftToRight || mirror_type == SwitchEach)
+    {
+      for (std::map<int, int>::iterator it = lower_body_mirror_joints_lr_.begin();
+          it != lower_body_mirror_joints_lr_.end(); it++)
+      {
+        int left_id = it->first;
+        int right_id = it->second;
+        int mirror_value = convert4095ToMirror(left_id, before_step.position[left_id]);
+
+        page_.step[index].position[right_id] = mirror_value;
+      }
+    }
+  }
+
+  // draw step
+  drawStep(index);
+  edited_ = true;
 }
 
 void ActionEditor::writeStepCmd(int index)
