@@ -56,6 +56,9 @@ int main(int argc, char **argv)
     return 0;
   }
 
+  // disable ros log
+  ros::console::shutdown();
+
   editor.drawIntro();
 
   while (1)
