@@ -127,6 +127,7 @@ public:
   int screen_row_;
 
 private:
+  const int PROFILE_VELOCITY_CTRL_ITEM = 560;
   void setSTDin();
   void resetSTDin();
 

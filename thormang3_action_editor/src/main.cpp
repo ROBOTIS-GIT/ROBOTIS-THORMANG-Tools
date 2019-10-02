@@ -275,6 +275,13 @@ int main(int argc, char **argv)
              else
                editor.printCmd("Need parameter");
            }
+           else if (strcmp(cmd, "m") == 0)
+           {
+             if (num_param > 1)
+               editor.moveStepCmd(iparam[0], iparam[1]);
+             else
+               editor.printCmd("Need parameter");
+           }
            else if (strcmp(cmd, "i") == 0)
            {
              if (num_param == 0)

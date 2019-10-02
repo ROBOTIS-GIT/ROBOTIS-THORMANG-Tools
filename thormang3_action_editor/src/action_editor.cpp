@@ -325,12 +325,12 @@ bool ActionEditor::initializeActionEditor(std::string robot_file_path, std::stri
       it != robot_->ports_.end(); it++)
   {
     port_to_sync_write_go_cmd_[it->first] = new dynamixel::GroupSyncWrite(
-        it->second, dynamixel::PacketHandler::getPacketHandler(2.0), 596,  // "profile_velocity"
+        it->second, dynamixel::PacketHandler::getPacketHandler(2.0), PROFILE_VELOCITY_CTRL_ITEM,  // "profile_velocity"
         8);
   }
 
-  default_editor_script_path_ = ros::package::getPath("op3_action_editor") + "/script/editor_script.yaml";
-  mirror_joint_file_path_ = ros::package::getPath("op3_action_editor") + "/config/config_mirror_joint.yaml";
+  default_editor_script_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/script/editor_script.yaml";
+  mirror_joint_file_path_ = ros::package::getPath(ROS_PACKAGE_NAME) + "/config/config_mirror_joint.yaml";
 
   // for mirroring
   upper_body_mirror_joints_rl_.clear();
@@ -1687,7 +1687,7 @@ void ActionEditor::goCmd(int index)
     return;
   }
 
-  if (index > page_.header.stepnum)
+  if (index >= page_.header.stepnum)
   {
     printCmd("Are you sure? (y/n)");
     if (_getch() != 'y')
@@ -1743,14 +1743,15 @@ void ActionEditor::goCmd(int index)
 
     uint8_t param[8];
 
-    param[0] = DXL_LOBYTE(DXL_LOWORD(goal_position));
-    param[1] = DXL_HIBYTE(DXL_LOWORD(goal_position));
-    param[2] = DXL_LOBYTE(DXL_HIWORD(goal_position));
-    param[3] = DXL_HIBYTE(DXL_HIWORD(goal_position));
-    param[4] = DXL_LOBYTE(DXL_LOWORD(distance));
-    param[5] = DXL_HIBYTE(DXL_LOWORD(distance));
-    param[6] = DXL_LOBYTE(DXL_HIWORD(distance));
-    param[7] = DXL_HIBYTE(DXL_HIWORD(distance));
+    param[0] = DXL_LOBYTE(DXL_LOWORD(distance));
+    param[1] = DXL_HIBYTE(DXL_LOWORD(distance));
+    param[2] = DXL_LOBYTE(DXL_HIWORD(distance));
+    param[3] = DXL_HIBYTE(DXL_HIWORD(distance));
+
+    param[4] = DXL_LOBYTE(DXL_LOWORD(goal_position));
+    param[5] = DXL_HIBYTE(DXL_LOWORD(goal_position));
+    param[6] = DXL_LOBYTE(DXL_HIWORD(goal_position));
+    param[7] = DXL_HIBYTE(DXL_HIWORD(goal_position));
 
     for (std::map<std::string, dynamixel::GroupSyncWrite *>::iterator it = port_to_sync_write_go_cmd_.begin();
         it != port_to_sync_write_go_cmd_.end(); it++)
@@ -1790,14 +1791,15 @@ void ActionEditor::goCmd(int index)
 
     uint8_t param[8];
 
-    param[0] = DXL_LOBYTE(DXL_LOWORD(goal_position));
-    param[1] = DXL_HIBYTE(DXL_LOWORD(goal_position));
-    param[2] = DXL_LOBYTE(DXL_HIWORD(goal_position));
-    param[3] = DXL_HIBYTE(DXL_HIWORD(goal_position));
-    param[4] = DXL_LOBYTE(DXL_LOWORD(distance));
-    param[5] = DXL_HIBYTE(DXL_LOWORD(distance));
-    param[6] = DXL_LOBYTE(DXL_HIWORD(distance));
-    param[7] = DXL_HIBYTE(DXL_HIWORD(distance));
+    param[0] = DXL_LOBYTE(DXL_LOWORD(distance));
+    param[1] = DXL_HIBYTE(DXL_LOWORD(distance));
+    param[2] = DXL_LOBYTE(DXL_HIWORD(distance));
+    param[3] = DXL_HIBYTE(DXL_HIWORD(distance));
+
+    param[4] = DXL_LOBYTE(DXL_LOWORD(goal_position));
+    param[5] = DXL_HIBYTE(DXL_LOWORD(goal_position));
+    param[6] = DXL_LOBYTE(DXL_HIWORD(goal_position));
+    param[7] = DXL_HIBYTE(DXL_HIWORD(goal_position));
 
     for (std::map<std::string, dynamixel::GroupSyncWrite *>::iterator it = port_to_sync_write_go_cmd_.begin();
         it != port_to_sync_write_go_cmd_.end(); it++)
