@@ -1731,8 +1731,11 @@ void ActionEditor::goCmd(int index)
     else
       distance = goal_position - start_position;
 
+    double rev = distance / 607500.0;
+    distance = 2920 * rev / 0.01;
+
 //    wDistance = 200;
-    distance = distance * 0.03;
+//    distance = distance * 0.03;
 
     if (max_distance < distance)
       max_distance = distance;
