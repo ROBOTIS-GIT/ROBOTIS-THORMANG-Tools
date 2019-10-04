@@ -23,6 +23,7 @@
   <depend>robotis_controller</depend>
   <depend>robotis_device</depend>
   <depend>thormang3_action_module</depend>
+  <depend>thormang3_base_module</depend>
   <depend>libncurses-dev</depend>
   <depend>yaml-cpp</depend>
   <exec_depend>thormang3_manager</exec_depend>

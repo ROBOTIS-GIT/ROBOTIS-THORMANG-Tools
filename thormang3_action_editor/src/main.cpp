@@ -30,6 +30,7 @@ void sighandler(int sig)
   term.c_lflag |= ICANON | ECHO;
   tcsetattr( STDIN_FILENO, TCSANOW, &term);
 
+  system("clear");
   exit(0);
 }
 
@@ -55,6 +56,9 @@ int main(int argc, char **argv)
     ROS_ERROR("Failed to Initialize");
     return 0;
   }
+
+  // disable ros log
+  ros::console::shutdown();
 
   editor.drawIntro();
 
@@ -272,6 +276,13 @@ int main(int argc, char **argv)
              else
                editor.printCmd("Need parameter");
            }
+           else if (strcmp(cmd, "m") == 0)
+           {
+             if (num_param > 1)
+               editor.moveStepCmd(iparam[0], iparam[1]);
+             else
+               editor.printCmd("Need parameter");
+           }
            else if (strcmp(cmd, "i") == 0)
            {
              if (num_param == 0)
@@ -288,10 +299,17 @@ int main(int argc, char **argv)
            }
            else if (strcmp(cmd, "new") == 0)
              editor.newCmd();
+           else if (strcmp(cmd, "g2") == 0)
+           {
+             if (num_param > 0)
+               editor.goCmd_2(iparam[0]);
+             else
+               editor.printCmd("Need parameter");
+           }
            else if (strcmp(cmd, "g") == 0)
            {
              if (num_param > 0)
-               editor.goCmd(iparam[0]);
+               editor.goCmd_2(iparam[0]);
              else
                editor.printCmd("Need parameter");
            }

@@ -17,6 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
   robotis_controller
   robotis_device
   thormang3_action_module
+  thormang3_base_module
 )
 
 find_package(Curses REQUIRED)
@@ -64,6 +65,7 @@ catkin_package(
     robotis_controller
     robotis_device
     thormang3_action_module
+    thormang3_base_module
   DEPENDS CURSES
 )
 
