@@ -268,6 +268,7 @@ bool ActionEditor::initializeActionEditor(std::string robot_file_path, std::stri
   }
   ctrl_->loadOffset(offset_file_path);
   ctrl_->addMotionModule((robotis_framework::MotionModule*)ActionModule::getInstance());
+  ctrl_->addMotionModule((robotis_framework::MotionModule*)BaseModule::getInstance());
   ActionModule::getInstance()->enableAllJoints();
 
   robot_ = ctrl_->robot_;
@@ -347,6 +348,12 @@ int ActionEditor::convert4095ToPositionValue(int id, int w4095)
 {
   double rad = (w4095 - 2048)*M_PI/2048.0;
   return robot_->dxls_[joint_id_to_name_[id]]->convertRadian2Value(rad);
+}
+
+double ActionEditor::convert4095ToRadPosition(int id, int w4095)
+{
+  double rad = (w4095 - 2048)*M_PI/2048.0;
+  return rad;
 }
 
 int ActionEditor::convertPositionValueTo4095(int id, int PositionValue)
@@ -1731,11 +1738,9 @@ void ActionEditor::goCmd(int index)
     else
       distance = goal_position - start_position;
 
-    double rev = distance / 607500.0;
-    distance = 2920 * rev / 0.01;
-
 //    wDistance = 200;
 //    distance = distance * 0.03;
+    distance = distance * 0.15;
 
     if (max_distance < distance)
       max_distance = distance;
@@ -1816,6 +1821,72 @@ void ActionEditor::goCmd(int index)
   {
     it->second->txPacket();
   }
+
+  step_ = page_.step[index];
+  drawStep(7);
+  goToCursor(cmd_col_, cmd_row_);
+  printf("Go Command Completed");
+}
+
+void ActionEditor::goCmd_2(int index)
+{
+  if (index < 0 || index >= action_file_define::MAXNUM_STEP)
+  {
+    printCmd("Invalid step index");
+    return;
+  }
+
+  if (index >= page_.header.stepnum)
+  {
+    printCmd("Are you sure? (y/n)");
+    if (_getch() != 'y')
+    {
+      clearCmd();
+      return;
+    }
+  }
+
+  ctrl_->startTimer();
+  ros::Duration(0.03).sleep(); // waiting for timer start
+
+  BaseModule *base_module = BaseModule::getInstance();
+
+  //make map, key : joint_name, value : joint_init_pos_rad;
+  std::map<std::string, double> go_pose;
+
+  for (std::map<int, int>::iterator it = joint_id_to_row_index_.begin();
+       it != joint_id_to_row_index_.end();
+       it++)
+  {
+    int id = it->first;
+    std::string joint_name = joint_id_to_name_[id];
+    if (page_.step[index].position[id] & action_file_define::INVALID_BIT_MASK)
+    {
+      printCmd("Exist invalid joint value");
+      return;
+    }
+
+    double goal_position = convert4095ToRadPosition(id, page_.step[index].position[id]);
+    go_pose[joint_name] = goal_position;
+  }
+
+  base_module->poseGenerateProc(go_pose);
+
+  ros::Duration(0.01).sleep();
+
+  while (base_module->isRunning())
+    ros::Duration(0.01).sleep();
+
+  ctrl_->stopTimer();
+  while (ctrl_->isTimerRunning())
+    ros::Duration(0.01).sleep();
+
+//  if (controller_->isTimerRunning())
+//  {
+//    ROS_INFO("Timer Running");
+//  }
+
+  ctrl_->setCtrlModule("none");
 
   step_ = page_.step[index];
   drawStep(7);

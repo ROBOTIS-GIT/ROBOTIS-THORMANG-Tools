@@ -39,6 +39,7 @@
 #include "robotis_controller/robotis_controller.h"
 
 #include "thormang3_action_module/action_module.h"
+#include "thormang3_base_module/base_module.h"
 
 #define ROBOT_NAME "THORMANG3"
 
@@ -120,6 +121,7 @@ public:
   void copyCmd(int index);
   void newCmd();
   void goCmd(int index);
+  void goCmd_2(int index);
   void saveCmd();
   void nameCmd();
 
@@ -132,6 +134,7 @@ private:
   void resetSTDin();
 
   int convert4095ToPositionValue(int id, int w4095);
+  double convert4095ToRadPosition(int id, int w4095);
   int convertPositionValueTo4095(int id, int PositionValue);
   int convert4095ToMirror(int id, int w4095);
 
