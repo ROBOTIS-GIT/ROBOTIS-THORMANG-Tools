@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 ROBOTIS CO., LTD.
+* Copyright 201 ROBOTIS CO., LTD.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,12 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-/*
- * main.cpp
- *
- *  Created on: 2016. 12. 16.
- *      Author: Jay Song
- */
+/* Author: JaySong, Kayman Jung */
 
 #include "thormang3_action_editor/action_editor.h"
 

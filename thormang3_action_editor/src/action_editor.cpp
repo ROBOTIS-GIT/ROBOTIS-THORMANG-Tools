@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 ROBOTIS CO., LTD.
+* Copyright 2019 ROBOTIS CO., LTD.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,12 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-/*
- * action_editor.cpp
- *
- *  Created on: 2016. 12. 16.
- *      Author: Jay Song
- */
+/* Author: Jay Song, Kayman Jung */
 
 #include "thormang3_action_editor/action_editor.h"
 
@@ -1137,18 +1132,23 @@ void ActionEditor::toggleTorque()
 
 void ActionEditor::storeValueToCache()
 {
+  int cursor_col = curr_col_;
+  int cursor_row = curr_row_;
+
   cache_value_ = getValue();
+  printCmd("Copy Value");
+  goToCursor(cursor_col, cursor_row);
 }
 
 void ActionEditor::setValueFromCache()
 {
+  int cursor_col = curr_col_;
+  int cursor_row = curr_row_;
+
   // cache is empty.
   if (cache_value_ == -1)
   {
-    int cursor_col = curr_col_;
-    int cursor_row = curr_row_;
-
-    printCmd("Cache is empty.");
+    printCmd("Clipboard is empty.");
     goToCursor(cursor_col, cursor_row);
 
     return;
@@ -1156,11 +1156,19 @@ void ActionEditor::setValueFromCache()
 
   // set value
   setValue(cache_value_);
+
+  printCmd("Paste Value");
+  goToCursor(cursor_col, cursor_row);
 }
 
 void ActionEditor::clearCache()
 {
+  int cursor_col = curr_col_;
+  int cursor_row = curr_row_;
+
   cache_value_ = -1;
+  printCmd("Clear clipboard");
+  goToCursor(cursor_col, cursor_row);
 }
 
 // Command process
@@ -1532,6 +1540,8 @@ void ActionEditor::mirrorStepCmd(int index, int mirror_type, int target_type)
   // draw step
   drawStep(index);
   edited_ = true;
+
+  printCmd("Mirror command completed");
 }
 
 void ActionEditor::writeStepCmd(int index)
@@ -1915,10 +1925,17 @@ void ActionEditor::goCmd_2(int index)
 void ActionEditor::saveCmd()
 {
   if (edited_ == false)
+  {
+    goToCursor(cmd_col_, cmd_row_);
+    printf("Save Command Failed");
     return;
+  }
 
   if (ActionModule::getInstance()->savePage(page_idx_, &page_) == true)
     edited_ = false;
+
+  goToCursor(cmd_col_, cmd_row_);
+  printf("Save Command Completed");
 }
 
 void ActionEditor::nameCmd()

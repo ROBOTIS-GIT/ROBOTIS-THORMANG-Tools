@@ -1,5 +1,5 @@
 /*******************************************************************************
-* Copyright 2018 ROBOTIS CO., LTD.
+* Copyright 2019 ROBOTIS CO., LTD.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -14,12 +14,7 @@
 * limitations under the License.
 *******************************************************************************/
 
-/*
- * action_editor.h
- *
- *  Created on: 2016. 12. 16.
- *      Author: Jay Song
- */
+/* Author: Jay Song, Kayman Jung */
 
 #ifndef THORMANG3_ACTION_EDITOR_ACTION_EDITOR_H_
 #define THORMANG3_ACTION_EDITOR_ACTION_EDITOR_H_
@@ -35,7 +30,9 @@
 #include <pthread.h>
 #include <sys/wait.h>
 #include <ros/ros.h>
-
+#include <std_msgs/String.h>
+#include <yaml-cpp/yaml.h>
+#include "dynamixel_sdk/dynamixel_sdk.h"
 #include "robotis_controller/robotis_controller.h"
 
 #include "thormang3_action_module/action_module.h"
