@@ -136,6 +136,7 @@ private:
   int convert4095ToPositionValue(int id, int w4095);
   double convert4095ToRadPosition(int id, int w4095);
   int convertPositionValueTo4095(int id, int PositionValue);
+  double convertPositionValueToRad(int id, int PositionValue);
   int convert4095ToMirror(int id, int w4095);
 
   bool loadMp3Path(int mp3_index, std::string &path);

@@ -362,6 +362,12 @@ int ActionEditor::convertPositionValueTo4095(int id, int PositionValue)
   return (int)((rad + M_PI)*2048.0/M_PI);
 }
 
+double ActionEditor::convertPositionValueToRad(int id, int PositionValue)
+{
+  double rad = robot_->dxls_[joint_id_to_name_[id]]->convertValue2Radian(PositionValue);
+  return rad;
+}
+
 int ActionEditor::convert4095ToMirror(int id, int w4095)
 {
   return 4095 - w4095;
@@ -1110,8 +1116,12 @@ void ActionEditor::toggleTorque()
         - robot_->dxls_[joint_name]->value_of_0_radian_position_;
     value = value - offset;
 
-    step_.position[id] = convertPositionValueTo4095(id, value);
-    printf("%.4d", value);
+    int w4096_value = convertPositionValueTo4095(id, value);
+    step_.position[id] = w4096_value;
+    printf("%.4d", w4096_value);
+
+    // set goal position
+    robot_->dxls_[joint_name]->dxl_state_->goal_position_ = robot_->dxls_[joint_name]->convertValue2Radian(value);
   }
   else
   {
@@ -1744,7 +1754,7 @@ void ActionEditor::goCmd(int index)
 
 //    wDistance = 200;
 //    distance = distance * 0.03;
-    double velocity = distance * 0.005;
+    double velocity = distance * 0.004;
 
     if (max_distance < distance)
       max_distance = distance;
@@ -1882,8 +1892,8 @@ void ActionEditor::goCmd_2(int index)
     go_pose[joint_name] = goal_position;
   }
 
-  double mov_time = 5.0;
-  base_module->poseGenerateProc(go_pose, mov_time);
+  // move time : 5.0 sec
+  base_module->poseGenerateProc(go_pose);
 
   ros::Duration(0.01).sleep();
 
@@ -1893,11 +1903,6 @@ void ActionEditor::goCmd_2(int index)
   ctrl_->stopTimer();
   while (ctrl_->isTimerRunning())
     ros::Duration(0.01).sleep();
-
-//  if (controller_->isTimerRunning())
-//  {
-//    ROS_INFO("Timer Running");
-//  }
 
   ctrl_->setCtrlModule("none");
 

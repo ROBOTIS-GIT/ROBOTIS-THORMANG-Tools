@@ -308,7 +308,7 @@ int main(int argc, char **argv)
            else if (strcmp(cmd, "g") == 0)
            {
              if (num_param > 0)
-               editor.goCmd(iparam[0]);
+               editor.goCmd_2(iparam[0]);
              else
                editor.printCmd("Need parameter");
            }
