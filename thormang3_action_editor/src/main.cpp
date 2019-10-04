@@ -30,6 +30,7 @@ void sighandler(int sig)
   term.c_lflag |= ICANON | ECHO;
   tcsetattr( STDIN_FILENO, TCSANOW, &term);
 
+  system("clear");
   exit(0);
 }
 
