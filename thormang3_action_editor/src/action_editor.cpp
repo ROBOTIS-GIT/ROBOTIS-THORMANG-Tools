@@ -1740,7 +1740,7 @@ void ActionEditor::goCmd(int index)
 
 //    wDistance = 200;
 //    distance = distance * 0.03;
-    distance = distance * 0.15;
+    distance = distance * 0.015;
 
     if (max_distance < distance)
       max_distance = distance;
