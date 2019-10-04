@@ -872,6 +872,9 @@ void ActionEditor::setValue(int value)
             printf("%.4d", value);
             edited_ = true;
           }
+
+          double rad_position = convert4095ToRadPosition(id, value);
+          ctrl_->robot_->dxls_[joint_id_to_name_[id]]->dxl_state_->goal_position_ = rad_position;
         }
       }
     }
@@ -1279,14 +1282,14 @@ void ActionEditor::playCmd(int mp3_index)
   ctrl_->startTimer();
   ros::Duration(0.03).sleep(); // waiting for timer start
 
-  std_msgs::String msg;
-  msg.data = "action_module";
-  enable_ctrl_module_pub_.publish(msg);
+  std::string module_name = "action_module";
+  ctrl_->setCtrlModule(module_name);
   ros::Duration(0.03).sleep(); // waiting for enable
 
   if (ActionModule::getInstance()->start(page_idx_, &page_) == false)
   {
     printCmd("Failed to play this page!");
+    ctrl_->setCtrlModule("none");
     ctrl_->stopTimer();
     return;
   }
@@ -1334,6 +1337,7 @@ void ActionEditor::playCmd(int mp3_index)
   }
   resetSTDin();
 
+  ctrl_->setCtrlModule("none");
   ctrl_->stopTimer();
 
   goToCursor(cmd_col_, cmd_row_);
@@ -1740,7 +1744,7 @@ void ActionEditor::goCmd(int index)
 
 //    wDistance = 200;
 //    distance = distance * 0.03;
-    distance = distance * 0.015;
+    double velocity = distance * 0.005;
 
     if (max_distance < distance)
       max_distance = distance;
@@ -1751,10 +1755,10 @@ void ActionEditor::goCmd(int index)
 
     uint8_t param[8];
 
-    param[0] = DXL_LOBYTE(DXL_LOWORD(distance));
-    param[1] = DXL_HIBYTE(DXL_LOWORD(distance));
-    param[2] = DXL_LOBYTE(DXL_HIWORD(distance));
-    param[3] = DXL_HIBYTE(DXL_HIWORD(distance));
+    param[0] = DXL_LOBYTE(DXL_LOWORD(velocity));
+    param[1] = DXL_HIBYTE(DXL_LOWORD(velocity));
+    param[2] = DXL_LOBYTE(DXL_HIWORD(velocity));
+    param[3] = DXL_HIBYTE(DXL_HIWORD(velocity));
 
     param[4] = DXL_LOBYTE(DXL_LOWORD(goal_position));
     param[5] = DXL_HIBYTE(DXL_LOWORD(goal_position));
@@ -1766,6 +1770,9 @@ void ActionEditor::goCmd(int index)
     {
       it->second->addParam(id, param);
     }
+
+    // set goal position
+    robot_->dxls_[joint_name]->dxl_state_->goal_position_ = convert4095ToRadPosition(id, page_.step[index].position[id]);
   }
 
   for (std::map<std::string, dynamixel::GroupSyncWrite *>::iterator it = port_to_sync_write_go_cmd_.begin();
@@ -1774,7 +1781,8 @@ void ActionEditor::goCmd(int index)
     it->second->txPacket();
   }
 
-  sleep(max_distance / 1000 + 2);
+  //sleep(max_distance / 1000 + 2);
+  sleep(3.0);
 
   for (std::map<std::string, dynamixel::GroupSyncWrite *>::iterator it = port_to_sync_write_go_cmd_.begin();
       it != port_to_sync_write_go_cmd_.end(); it++)
@@ -1789,7 +1797,7 @@ void ActionEditor::goCmd(int index)
     id = it->first;
     std::string joint_name = joint_id_to_name_[id];
 
-    distance = 0;
+    double velocity = 0;
 
     goal_position = convert4095ToPositionValue(id, page_.step[index].position[id]);
 
@@ -1799,10 +1807,10 @@ void ActionEditor::goCmd(int index)
 
     uint8_t param[8];
 
-    param[0] = DXL_LOBYTE(DXL_LOWORD(distance));
-    param[1] = DXL_HIBYTE(DXL_LOWORD(distance));
-    param[2] = DXL_LOBYTE(DXL_HIWORD(distance));
-    param[3] = DXL_HIBYTE(DXL_HIWORD(distance));
+    param[0] = DXL_LOBYTE(DXL_LOWORD(velocity));
+    param[1] = DXL_HIBYTE(DXL_LOWORD(velocity));
+    param[2] = DXL_LOBYTE(DXL_HIWORD(velocity));
+    param[3] = DXL_HIBYTE(DXL_HIWORD(velocity));
 
     param[4] = DXL_LOBYTE(DXL_LOWORD(goal_position));
     param[5] = DXL_HIBYTE(DXL_LOWORD(goal_position));
@@ -1813,7 +1821,11 @@ void ActionEditor::goCmd(int index)
         it != port_to_sync_write_go_cmd_.end(); it++)
     {
       it->second->addParam(id, param);
-    }
+    }   
+	
+	// set goal position
+    robot_->dxls_[joint_name]->dxl_state_->goal_position_ = convert4095ToRadPosition(id, page_.step[index].position[id]);
+
   }
 
   for (std::map<std::string, dynamixel::GroupSyncWrite *>::iterator it = port_to_sync_write_go_cmd_.begin();
@@ -1870,7 +1882,8 @@ void ActionEditor::goCmd_2(int index)
     go_pose[joint_name] = goal_position;
   }
 
-  base_module->poseGenerateProc(go_pose);
+  double mov_time = 5.0;
+  base_module->poseGenerateProc(go_pose, mov_time);
 
   ros::Duration(0.01).sleep();
 
